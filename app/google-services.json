@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1041602950330",
+    "project_id": "chefmate-app",
+    "storage_bucket": "chefmate-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041602950330:android:dd857e7f3a6149b678be83",
+        "android_client_info": {
+          "package_name": "com.chefmate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDunPcDEFnBAowC9qQIlD6A2GVmGgCJOHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
