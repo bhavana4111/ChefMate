@@ -20,11 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.chefmate.R
-import com.chefmate.model.ProductModel
+import com.chefmate.ui.model.ProductModel
 import com.chefmate.routing.Screen
 import com.chefmate.ui.theme.ChefmateAppTheme
 import com.chefmate.ui.theme.blue
-import com.chefmate.ui.theme.white
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

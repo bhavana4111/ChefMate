@@ -37,9 +37,10 @@ fun DetailScreen(navController: NavController) {
         Scaffold {
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .background(color = blue)
                     .padding(top = 40.dp)
-                    .verticalScroll(scrollState)
+                    .height(IntrinsicSize.Max)
             ) {
                 SmallTopAppBar(
                     title = {
@@ -68,7 +69,7 @@ fun DetailScreen(navController: NavController) {
                     )
                 )
 
-                Column(modifier = Modifier.background(color = white)) {
+                Column(modifier = Modifier.fillMaxSize().fillMaxHeight().background(color = white)) {
                     Card(
                         modifier = Modifier
                             .padding(10.dp)
