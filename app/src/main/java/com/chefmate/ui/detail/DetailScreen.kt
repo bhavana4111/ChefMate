@@ -1,6 +1,7 @@
 package com.chefmate.ui.detail
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,14 +24,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.chefmate.R
+import com.chefmate.routing.Screen
 import com.chefmate.ui.theme.ChefmateAppTheme
 import com.chefmate.ui.theme.blue
 import com.chefmate.ui.theme.white
+import com.chefmate.utils.RoundedButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DetailScreen(navController: NavController) {
+fun DetailScreen(navController: NavController,name:String,image:Int,price:String,detail:String) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     ChefmateAppTheme {
@@ -80,7 +83,7 @@ fun DetailScreen(navController: NavController) {
                         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_chefmat),
+                            painter = painterResource(id = image),
                             contentDescription = "Image",
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
@@ -89,14 +92,14 @@ fun DetailScreen(navController: NavController) {
                         )
                     }
                     Text(
-                        "Test Product",
+                        name,
                         fontSize = 14.sp,
                         color = Color.Black,
                         modifier = Modifier
                             .padding(vertical = 5.dp, horizontal = 10.dp)
                     )
                     Text(
-                        "140.00",
+                        price,
                         fontSize = 14.sp,
                         color = Color.Black,
                         modifier = Modifier
@@ -119,11 +122,22 @@ fun DetailScreen(navController: NavController) {
                         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                     ) {
                         Text(
-                            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                            detail,
                             fontSize = 14.sp,
                             color = Color.Black,
                             modifier = Modifier
                                 .padding(vertical = 5.dp, horizontal = 10.dp)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                    ) {
+                        RoundedButton(
+                            text = "Submit Review",
+                            textColor = blue,
+                            onClick = {
+                                navController.navigate(Screen.ReviewScreen.route)
+                            }
                         )
                     }
 

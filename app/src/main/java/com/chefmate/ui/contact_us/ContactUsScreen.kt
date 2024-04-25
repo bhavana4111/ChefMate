@@ -175,7 +175,7 @@ fun ContactUsScreen(navController: NavController) {
                     isBooked = false
                 },
                 title = { Text(stringResource(id = R.string.app_name)) },
-                text = { Text("Your booking has been successfully.") },
+                text = { Text("We will contact you soon.") },
                 confirmButton = {
                     RoundedButton(
                         text = "Ok",

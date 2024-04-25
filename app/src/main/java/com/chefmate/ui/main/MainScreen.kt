@@ -24,6 +24,9 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import com.chefmate.R
+import com.chefmate.application.AppConfiguration.Companion.filterList
+import com.chefmate.application.AppConfiguration.Companion.list
+import com.chefmate.application.AppConfiguration.Companion.ratingList
 import com.chefmate.drawer.DrawerBody
 import com.chefmate.drawer.DrawerHeader
 import com.chefmate.drawer.TopBar
@@ -46,40 +49,23 @@ fun MainScreen(navController: NavController) {
         ChefmateDatabase(context)
     }
     var filter by rememberSaveable { mutableStateOf(false) }
+    var rate by rememberSaveable { mutableStateOf(false) }
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
     var isLogout by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     var search by remember { mutableStateOf("") }
     var filterDropDown by remember { mutableStateOf("") }
+    var ratingDropDown by remember { mutableStateOf("") }
     val icon = if (filter)
         Icons.Filled.KeyboardArrowUp
     else
         Icons.Filled.KeyboardArrowDown
-    val filterList =
-        listOf(
-            "Good source of phosphorus",
-            "Good source of vitamin B12",
-            "Good source of calcium",
-            "Good source of protein",
-            "Good source of zinc"
-        )
-    val list = arrayListOf<ProductModel>().apply {
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-        add(ProductModel(id = "", image = "", name = "Test Product"))
-    }
+
     LaunchedEffect(Unit) {
         search = ""
         filterDropDown = ""
+        ratingDropDown = ""
     }
     ChefmateAppTheme {
         androidx.compose.material.Scaffold(
@@ -128,7 +114,12 @@ fun MainScreen(navController: NavController) {
                     CustomSearchView(search = search, onValueChange = {
                         search = it
                     }, onClick = {
-                        navController.navigate(Screen.SearchScreen.route)
+                        if(search.isNotEmpty()) {
+                            navController.navigate(Screen.SearchScreen.route+"/$search")
+                        }else{
+                            navController.navigate(Screen.SearchScreen.route+"/null")
+                        }
+
                     })
                 }
                 OutlinedTextField(
@@ -199,7 +190,75 @@ fun MainScreen(navController: NavController) {
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-                if (filterDropDown != "") {
+                OutlinedTextField(
+                    value = if (ratingDropDown != "") ratingDropDown else "Select rate",
+                    onValueChange = { ratingDropDown = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .clickable { rate = !rate },
+                    enabled = false,
+                    trailingIcon = {
+                        Icon(
+                            icon, "contentDescription",
+                            tint = white
+                        )
+                    },
+                    textStyle = TextStyle(color = white),
+                    colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = white,
+                        unfocusedBorderColor = white,
+                        disabledBorderColor = white
+                    ),
+                    shape = RoundedCornerShape(50.dp),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    if (rate) {
+                        Popup(
+                            alignment = Alignment.TopCenter,
+                            properties = PopupProperties(
+                                excludeFromSystemGesture = true,
+                            ),
+                            onDismissRequest = { rate = false }
+                        ) {
+
+                            Column(
+                                modifier = Modifier
+                                    .heightIn(max = 220.dp)
+                                    .verticalScroll(state = scrollState)
+                                    .padding(10.dp)
+                                    .border(width = 1.dp, color = Color.Gray),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+
+                                ratingList.onEachIndexed { index, item ->
+                                    if (index != 0) {
+                                        Divider(thickness = 1.dp, color = Color.LightGray)
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(white)
+                                            .padding(10.dp)
+                                            .clickable {
+                                                ratingDropDown = item
+                                                rate = !rate
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(text = item ,style = TextStyle(color = Color.Black))
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                if (filterDropDown != "" || ratingDropDown != "") {
                     Row(
                         modifier = Modifier.padding(start = 10.dp, end = 10.dp)
                     ) {
@@ -207,7 +266,9 @@ fun MainScreen(navController: NavController) {
                             text = "Search",
                             textColor = blue,
                             onClick = {
-                                navController.navigate(Screen.SearchScreen.route)
+                                val filterData = if(filterDropDown.isNotEmpty()) filterDropDown else "null"
+                                val rateData = if(ratingDropDown.isNotEmpty()) ratingDropDown else "null"
+                                navController.navigate(Screen.SearchScreen.route+"/$filterData"+"/$rateData")
                             }
                         )
                     }
@@ -220,14 +281,14 @@ fun MainScreen(navController: NavController) {
                             .fillMaxWidth()
                             .height(200.dp)
                             .clickable {
-                                navController.navigate(Screen.Detail.route)
+                                navController.navigate(Screen.Detail.route+"/${productModel.name}"+"/${productModel.image}"+"/${productModel.price}"+"/${productModel.detail}")
                             },
                         shape = RoundedCornerShape(10.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_chefmat),
+                            painter = painterResource(id = productModel.image),
                             contentDescription = "Image",
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
