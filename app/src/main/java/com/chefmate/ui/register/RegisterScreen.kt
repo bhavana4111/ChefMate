@@ -9,24 +9,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
@@ -34,13 +27,14 @@ import com.chefmate.R
 import com.chefmate.routing.Screen
 import com.chefmate.ui.chefmate_database.ChefmateDatabase
 import com.chefmate.ui.theme.ChefmateAppTheme
-import com.chefmate.utils.OutlineFormField
-import com.chefmate.utils.RoundedButton
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.chefmate.ui.theme.blue
 import com.chefmate.ui.theme.white
+import com.chefmate.utils.OutlineFormField
+import com.chefmate.utils.RoundedButton
 import com.chefmate.utils.isValidEmail
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -55,8 +49,59 @@ fun RegisterScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
-
+    val firebaseAuth = FirebaseAuth.getInstance()
     val db = Firebase.firestore
+
+    fun registerUser() {
+        val user = hashMapOf(
+            "name" to name, "userId" to userId.lowercase(), "email" to email, "password" to password
+        )
+        firebaseAuth.createUserWithEmailAndPassword(email.lowercase(), password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    preferenceManager.saveData(
+                        "isLogin", true
+                    )
+                    Toast.makeText(
+                        context, "Register successfully.", Toast.LENGTH_SHORT
+                    ).show()
+                    navController.navigate(
+                        Screen.MainScreen.route
+                    ) {
+                        popUpTo(Screen.RegisterScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                    showDialog = false
+                } else {
+                    Toast.makeText(
+                        context, task.exception?.message.toString(), Toast.LENGTH_SHORT
+                    ).show()
+                    showDialog = false
+                }
+            }
+        /*db.collection("users").add(user).addOnSuccessListener { documentReference ->
+                preferenceManager.saveData(
+                    "isLogin", true
+                )
+                Toast.makeText(
+                    context, "Register successfully.", Toast.LENGTH_SHORT
+                ).show()
+                navController.navigate(
+                    Screen.MainScreen.route
+                ) {
+                    popUpTo(Screen.RegisterScreen.route) {
+                        inclusive = true
+                    }
+                }
+                showDialog = false
+            }.addOnFailureListener { e ->
+                Toast.makeText(
+                    context, e.message.toString(), Toast.LENGTH_SHORT
+                ).show()
+                showDialog = false
+            }*/
+    }
     ChefmateAppTheme {
         Scaffold {
             Column(
@@ -86,9 +131,7 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(30.dp))
                 Text(
-                    "Name",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = TextStyle(color = white)
+                    "Name", modifier = Modifier.fillMaxWidth(), style = TextStyle(color = white)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlineFormField(
@@ -101,9 +144,7 @@ fun RegisterScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    "User Id",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = TextStyle(color = white)
+                    "User Id", modifier = Modifier.fillMaxWidth(), style = TextStyle(color = white)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlineFormField(
@@ -116,9 +157,7 @@ fun RegisterScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    "Email",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = TextStyle(color = white)
+                    "Email", modifier = Modifier.fillMaxWidth(), style = TextStyle(color = white)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlineFormField(
@@ -132,9 +171,7 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
-                    "Password",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = TextStyle(color = white)
+                    "Password", modifier = Modifier.fillMaxWidth(), style = TextStyle(color = white)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlineFormField(
@@ -151,150 +188,46 @@ fun RegisterScreen(navController: NavController) {
                 Row(
                     modifier = Modifier
                 ) {
-                    RoundedButton(
-                        text = "Register",
-                        textColor = blue,
-                        onClick = {
-                            if (name.isNotEmpty()) {
-                                if (userId.isNotEmpty()) {
-                                    if (email.isNotEmpty()) {
-                                        if (!isValidEmail(email)) {
-                                            if (password.isNotEmpty()) {
-                                                showDialog = true
-                                                val user = hashMapOf(
-                                                    "name" to name,
-                                                    "userId" to userId.lowercase(),
-                                                    "email" to email,
-                                                    "password" to password
-                                                )
-                                                db.collection("users")
-                                                    .get()
-                                                    .addOnSuccessListener { result ->
-                                                        if (result.isEmpty) {
-                                                            db.collection("users")
-                                                                .add(user)
-                                                                .addOnSuccessListener { documentReference ->
-                                                                    preferenceManager.saveData(
-                                                                        "isLogin",
-                                                                        true
-                                                                    )
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        "Register successfully.",
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                    navController.navigate(
-                                                                        Screen.MainScreen.route
-                                                                    ) {
-                                                                        popUpTo(Screen.LoginScreen.route) {
-                                                                            inclusive = true
-                                                                        }
-                                                                    }
-                                                                    showDialog = false
-                                                                }
-                                                                .addOnFailureListener { e ->
+                    RoundedButton(text = "Register", textColor = blue, onClick = {
+                        if (name.isNotEmpty()) {
+                            if (userId.isNotEmpty()) {
+                                if (email.isNotEmpty()) {
+                                    if (!isValidEmail(email)) {
+                                        if (password.isNotEmpty()) {
+                                            showDialog = true
+                                            registerUser()
 
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        e.message.toString(),
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                    showDialog = false
-                                                                }
-                                                        } else {
-                                                            for (document in result) {
-                                                                if (document.data["userId"] == userId.lowercase() &&
-                                                                    document.data["password"] == password
-                                                                ) {
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        "Already exists.",
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                    showDialog = false
-                                                                    return@addOnSuccessListener
-                                                                } else {
-                                                                    db.collection("users")
-                                                                        .add(user)
-                                                                        .addOnSuccessListener { documentReference ->
-                                                                            preferenceManager.saveData(
-                                                                                "isLogin",
-                                                                                true
-                                                                            )
-                                                                            Toast.makeText(
-                                                                                context,
-                                                                                "Register successfully.",
-                                                                                Toast.LENGTH_SHORT
-                                                                            ).show()
-                                                                            navController.navigate(
-                                                                                Screen.MainScreen.route
-                                                                            ) {
-                                                                                popUpTo(Screen.RegisterScreen.route) {
-                                                                                    inclusive = true
-                                                                                }
-                                                                            }
-                                                                            showDialog = false
-                                                                        }
-                                                                        .addOnFailureListener { e ->
-                                                                            Toast.makeText(
-                                                                                context,
-                                                                                e.message.toString(),
-                                                                                Toast.LENGTH_SHORT
-                                                                            ).show()
-                                                                            showDialog = false
-                                                                        }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    .addOnFailureListener { exception ->
-                                                        Toast.makeText(
-                                                            context,
-                                                            exception.message.toString(),
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                        showDialog = false
-                                                    }
-                                            } else {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Please enter password.",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-
-                                            }
                                         } else {
                                             Toast.makeText(
                                                 context,
-                                                "Please enter email.",
+                                                "Please enter password.",
                                                 Toast.LENGTH_LONG
                                             ).show()
 
                                         }
                                     } else {
                                         Toast.makeText(
-                                            context,
-                                            "Please enter valid email.",
-                                            Toast.LENGTH_LONG
+                                            context, "Please enter email.", Toast.LENGTH_LONG
                                         ).show()
 
                                     }
                                 } else {
                                     Toast.makeText(
-                                        context,
-                                        "Please enter user id.",
-                                        Toast.LENGTH_LONG
+                                        context, "Please enter valid email.", Toast.LENGTH_LONG
                                     ).show()
+
                                 }
                             } else {
                                 Toast.makeText(
-                                    context,
-                                    "Please enter name.",
-                                    Toast.LENGTH_LONG
+                                    context, "Please enter user id.", Toast.LENGTH_LONG
                                 ).show()
                             }
+                        } else {
+                            Toast.makeText(
+                                context, "Please enter name.", Toast.LENGTH_LONG
+                            ).show()
                         }
-                    )
+                    })
                 }
 
 
@@ -306,8 +239,7 @@ fun RegisterScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Bottom
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -324,19 +256,18 @@ fun RegisterScreen(navController: NavController) {
                                     inclusive = true
                                 }
                             }
-                        }, textAlign = TextAlign.End,
-                        style = TextStyle(color = white)
+                        }, textAlign = TextAlign.End, style = TextStyle(color = white)
                     )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             }
             if (showDialog) {
                 Dialog(
-                    onDismissRequest = {  },
+                    onDismissRequest = { },
                     DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
                 ) {
                     Box(
-                        contentAlignment= Center,
+                        contentAlignment = Center,
                         modifier = Modifier
                             .size(100.dp)
                             .background(white, shape = RoundedCornerShape(8.dp))

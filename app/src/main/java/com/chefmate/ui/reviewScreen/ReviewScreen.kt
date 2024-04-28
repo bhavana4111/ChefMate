@@ -148,7 +148,7 @@ fun ReviewScreen(navController: NavController) {
                     ) {
                         RoundedButton(
                             text = "Submit rating",
-                            textColor = white,
+                            textColor = blue,
                             onClick = {
                                 if (rating <= 0F) {
                                     Toast.makeText(

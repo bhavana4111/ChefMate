@@ -49,10 +49,12 @@ fun Navigation() {
             }
 
         }
-        composable(route = Screen.SearchScreen.route+"/{search}"+"/{rate}") {
+        composable(route = Screen.SearchScreen.route+"/{search}"+"/{health}"+"/{rate}"+"/{recepie}") {
             val search = it.arguments?.getString("search")
             val rate = it.arguments?.getString("rate")
-            SearchScreen(navController = navController,search= search,rate=rate)
+            val health = it.arguments?.getString("health")
+            val recepie = it.arguments?.getString("recepie")
+            SearchScreen(navController = navController,search= search,rate=rate,health=health,recepie=recepie)
 
         }
     }

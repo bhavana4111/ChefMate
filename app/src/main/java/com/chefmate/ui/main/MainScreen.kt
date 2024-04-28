@@ -1,6 +1,7 @@
 package com.chefmate.ui.main
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,18 +28,22 @@ import com.chefmate.R
 import com.chefmate.application.AppConfiguration.Companion.filterList
 import com.chefmate.application.AppConfiguration.Companion.list
 import com.chefmate.application.AppConfiguration.Companion.ratingList
+import com.chefmate.application.AppConfiguration.Companion.recepieList
 import com.chefmate.drawer.DrawerBody
 import com.chefmate.drawer.DrawerHeader
 import com.chefmate.drawer.TopBar
-import com.chefmate.ui.model.ProductModel
 import com.chefmate.routing.Screen
 import com.chefmate.ui.chefmate_database.ChefmateDatabase
+import com.chefmate.ui.model.ProductModel
 import com.chefmate.ui.theme.ChefmateAppTheme
 import com.chefmate.ui.theme.blue
 import com.chefmate.ui.theme.white
 import com.chefmate.utils.CustomSearchView
 import com.chefmate.utils.RoundedButton
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -62,10 +67,54 @@ fun MainScreen(navController: NavController) {
     else
         Icons.Filled.KeyboardArrowDown
 
+    val db = Firebase.firestore
+
+    var recepieDropDown by remember {
+        mutableStateOf("")
+    }
+
+    var showRecepie by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    fun getAllData() {
+        db.collection("arrayData")
+            .get()
+            .addOnSuccessListener { result ->
+                list.clear()
+                for (document in result) {
+                    Log.e("TAG", "${document.id} => ${document.data} +=> ${document.data}")
+                    if (document.data != null) {
+                        val jsonObject = JSONObject(document.data)
+                        Log.e("TAG", "getAllData: $jsonObject", )
+                        Log.e("TAG", "getAllData: ${jsonObject.optString("name")}", )
+                        list.apply {
+                            add(
+                                ProductModel(
+                                    name = jsonObject.optString("name"),
+                                    rating = jsonObject.optString("rating"),
+                                    price = jsonObject.optString("price"),
+                                    detail = jsonObject.optString("detail"),
+                                    image = R.drawable.ic_chefmat,
+                                    health = jsonObject.optString("health"),
+                                    receipe = jsonObject.optString("recipe"),
+                                )
+                            )
+                        }
+                    }
+
+
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("TAG", "Error getting documents: ", exception)
+            }
+    }
     LaunchedEffect(Unit) {
         search = ""
         filterDropDown = ""
         ratingDropDown = ""
+        getAllData()
     }
     ChefmateAppTheme {
         androidx.compose.material.Scaffold(
@@ -114,10 +163,10 @@ fun MainScreen(navController: NavController) {
                     CustomSearchView(search = search, onValueChange = {
                         search = it
                     }, onClick = {
-                        if(search.isNotEmpty()) {
-                            navController.navigate(Screen.SearchScreen.route+"/$search")
-                        }else{
-                            navController.navigate(Screen.SearchScreen.route+"/null")
+                        if (search.isNotEmpty()) {
+                            navController.navigate(Screen.SearchScreen.route +"/$search" +"/null" + "/null" + "/null")
+                        } else {
+                            navController.navigate(Screen.SearchScreen.route + "/null"+"/null" + "/null" + "/null")
                         }
 
                     })
@@ -134,7 +183,7 @@ fun MainScreen(navController: NavController) {
                         Icon(
                             icon, "contentDescription",
                             tint = white
-                            )
+                        )
                     },
                     textStyle = TextStyle(color = white),
                     colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
@@ -143,7 +192,7 @@ fun MainScreen(navController: NavController) {
                         disabledBorderColor = white
                     ),
                     shape = RoundedCornerShape(50.dp),
-                    )
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -181,7 +230,7 @@ fun MainScreen(navController: NavController) {
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(text = item ,style = TextStyle(color = Color.Black))
+                                        Text(text = item, style = TextStyle(color = Color.Black))
                                     }
                                 }
 
@@ -189,9 +238,77 @@ fun MainScreen(navController: NavController) {
                         }
                     }
                 }
+                OutlinedTextField(
+                    value = if (recepieDropDown != "") recepieDropDown else "Select recipe",
+                    onValueChange = { recepieDropDown = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .clickable { showRecepie = !showRecepie },
+                    enabled = false,
+                    trailingIcon = {
+                        Icon(
+                            icon, "contentDescription",
+                            tint = white
+                        )
+                    },
+                    textStyle = TextStyle(color = white),
+                    colors = androidx.compose.material3.TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = white,
+                        unfocusedBorderColor = white,
+                        disabledBorderColor = white
+                    ),
+                    shape = RoundedCornerShape(50.dp),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    if (showRecepie) {
+                        Popup(
+                            alignment = Alignment.TopCenter,
+                            properties = PopupProperties(
+                                excludeFromSystemGesture = true,
+                            ),
+                            onDismissRequest = { showRecepie = false }
+                        ) {
+
+                            Column(
+                                modifier = Modifier
+                                    .heightIn(max = 220.dp)
+                                    .verticalScroll(state = scrollState)
+                                    .padding(10.dp)
+                                    .border(width = 1.dp, color = Color.Gray),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+
+                                recepieList.onEachIndexed { index, item ->
+                                    if (index != 0) {
+                                        Divider(thickness = 1.dp, color = Color.LightGray)
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(white)
+                                            .padding(10.dp)
+                                            .clickable {
+                                                recepieDropDown = item
+                                                showRecepie = !showRecepie
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(text = item, style = TextStyle(color = Color.Black))
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(
-                    value = if (ratingDropDown != "") ratingDropDown else "Select rate",
+                    value = if (ratingDropDown != "") ratingDropDown else "Select Ratings",
                     onValueChange = { ratingDropDown = it },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -249,7 +366,7 @@ fun MainScreen(navController: NavController) {
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(text = item ,style = TextStyle(color = Color.Black))
+                                        Text(text = item, style = TextStyle(color = Color.Black))
                                     }
                                 }
 
@@ -258,7 +375,7 @@ fun MainScreen(navController: NavController) {
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-                if (filterDropDown != "" || ratingDropDown != "") {
+                if (filterDropDown != "" || ratingDropDown != ""|| recepieDropDown != "") {
                     Row(
                         modifier = Modifier.padding(start = 10.dp, end = 10.dp)
                     ) {
@@ -266,9 +383,13 @@ fun MainScreen(navController: NavController) {
                             text = "Search",
                             textColor = blue,
                             onClick = {
-                                val filterData = if(filterDropDown.isNotEmpty()) filterDropDown else "null"
-                                val rateData = if(ratingDropDown.isNotEmpty()) ratingDropDown else "null"
-                                navController.navigate(Screen.SearchScreen.route+"/$filterData"+"/$rateData")
+                                val filterData =
+                                    if (filterDropDown.isNotEmpty()) filterDropDown else "null"
+                                val rateData =
+                                    if (ratingDropDown.isNotEmpty()) ratingDropDown else "null"
+                                val recepie =
+                                    if (recepieDropDown.isNotEmpty()) recepieDropDown else "null"
+                                navController.navigate(Screen.SearchScreen.route +"/null" +"/$filterData" + "/$rateData" + "/$recepie")
                             }
                         )
                     }
@@ -281,7 +402,7 @@ fun MainScreen(navController: NavController) {
                             .fillMaxWidth()
                             .height(200.dp)
                             .clickable {
-                                navController.navigate(Screen.Detail.route+"/${productModel.name}"+"/${productModel.image}"+"/${productModel.price}"+"/${productModel.detail}")
+                                navController.navigate(Screen.Detail.route + "/${productModel.name}" + "/${productModel.image}" + "/${productModel.price}" + "/${productModel.detail}")
                             },
                         shape = RoundedCornerShape(10.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),

@@ -1,6 +1,7 @@
 package com.chefmate.ui.searchListing
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,16 +33,20 @@ import com.chefmate.ui.theme.white
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun SearchScreen(navController: NavController,search:String?,rate:String?) {
+fun SearchScreen(navController: NavController,search:String?,rate:String?,health:String?,recepie:String?) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val newList = arrayListOf<ProductModel>()
+    Log.e("TAG", "SearchScreen: ${list.size}", )
+    Log.e("TAG", "search: ${search}", )
+    Log.e("TAG", "health: ${health}", )
     if(list.size>0) {
-        if(search.toString().isEmpty() || search.toString()==null || search.toString()=="null"|| rate.toString().isEmpty() || rate.toString()==null || rate.toString()=="null") {
+        if(search.toString().isEmpty() && search.toString()==null && search.toString()=="null"&& rate.toString().isEmpty() && rate.toString()==null && rate.toString()=="null"&& health.toString().isEmpty() && health.toString()==null && recepie.toString()=="null"&& recepie.toString().isEmpty() && recepie.toString()==null && recepie.toString()=="null") {
             newList.addAll(list)
         }else{
             list.forEachIndexed { index, productModel ->
-                if (search==productModel.name || rate==productModel.rating) {
+                Log.e("TAG", "SearchScreen: $health==${productModel.health}")
+                if (search.toString().lowercase()==productModel.name.toString().lowercase() || rate.toString().lowercase()==productModel.rating.toString().lowercase() || health.toString().lowercase()==productModel.health.toString().lowercase() || recepie.toString().lowercase()==productModel.receipe.toString().lowercase()) {
                     newList.add(productModel)
                 }
 
@@ -120,7 +125,9 @@ fun SearchScreen(navController: NavController,search:String?,rate:String?) {
                         }
                     }
                 }else{
-                    Column(modifier = Modifier.fillMaxSize().background(color = white), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = white), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = "No Record Found.", modifier = Modifier
                             .fillMaxSize(), color = Color.Black, textAlign = TextAlign.Center)
                     }
